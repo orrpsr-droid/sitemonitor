@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SiteMonitor — узнай об изменении на сайте раньше всех</title>
+<meta name="description" content="Мониторинг изменений страниц для Windows: цены, наличие товара, вакансии, свои сайты. Алерты в Telegram и Discord за секунды. 7 дней PRO бесплатно, без аккаунтов — данные только у тебя.">
+<meta property="og:title" content="SiteMonitor — слежка за сайтами, которая успевает первой">
+<meta property="og:description" content="Цены, ресток, вакансии, свои сайты. Проверка хоть каждые 5 секунд, алерт в Telegram. Windows, без облака, без аккаунта.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "SiteMonitor",
+  "operatingSystem": "Windows 10/11 x64",
+  "applicationCategory": "UtilitiesApplication",
+  "description": "Мониторинг изменений веб-страниц: цены, наличие, вакансии, аптайм. Алерты в Telegram/Discord.",
+  "offers": [
+    { "@type": "Offer", "name": "PRO 7 дней", "price": "390", "priceCurrency": "RUB" },
+    { "@type": "Offer", "name": "PRO навсегда", "price": "1990", "priceCurrency": "RUB" }
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#1a1b26; --bg2:#16161e; --panel:#1f2335; --line:#2a2f4a;
+  --fg:#c0caf5; --brand:#7aa2f7; --ok:#9ece6a; --warn:#e0af68; --err:#f7768e;
+  --special:#bb9af7; --dim:#565f89; --muted:#414868;
+  --mono:'Cascadia Code',Consolas,'JetBrains Mono',monospace;
+  --sans:'Segoe UI',system-ui,-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.6;overflow-x:hidden}
+a{color:var(--brand);text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:50;background:rgba(26,27,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:28px;height:60px}
+.logo{font-family:var(--mono);font-weight:700;font-size:19px;color:var(--fg);letter-spacing:.5px}
+.logo b{color:var(--brand)}
+nav{display:flex;gap:22px;margin-left:auto;font-size:14.5px}
+nav a{color:var(--dim);transition:color .15s}
+nav a:hover{color:var(--fg)}
+.btn{display:inline-block;background:var(--brand);color:#16161e;font-weight:700;padding:10px 22px;border-radius:8px;transition:transform .12s,box-shadow .12s;cursor:pointer;border:0;font-size:15px}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(122,162,247,.35)}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand);padding:9px 20px}
+.btn.ghost:hover{box-shadow:none;background:rgba(122,162,247,.08)}
+
+/* ---------- hero ---------- */
+.hero{padding:96px 0 72px;position:relative}
+.hero::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(700px 340px at 18% -8%,rgba(122,162,247,.14),transparent 65%),
+  radial-gradient(600px 300px at 88% 12%,rgba(187,154,247,.10),transparent 65%);pointer-events:none}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+h1{font-size:44px;line-height:1.16;font-weight:800;letter-spacing:-.5px}
+h1 em{font-style:normal;color:var(--brand)}
+.sub{margin-top:18px;font-size:18.5px;color:var(--dim);max-width:520px}
+.cta-row{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap}
+.note{margin-top:14px;font-size:13px;color:var(--muted)}
+.note b{color:var(--warn)}
+
+/* консоль-псевдоскриншот: строки как в реальном логе продукта */
+.term{background:var(--bg2);border:1px solid var(--line);border-radius:12px;font-family:var(--mono);font-size:12.5px;box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden}
+.term-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+.term-bar i{width:11px;height:11px;border-radius:50%;display:block}
+.term-bar i:nth-child(1){background:var(--err)} .term-bar i:nth-child(2){background:var(--warn)} .term-bar i:nth-child(3){background:var(--ok)}
+.term-bar span{margin-left:8px;color:var(--muted);font-size:11.5px}
+.term-body{padding:16px 18px;line-height:1.85;white-space:pre-wrap}
+.t-dim{color:var(--muted)} .t-fg{color:var(--fg)} .t-info{color:#7dcfff} .t-ok{color:var(--ok)}
+.t-special{color:var(--special)} .t-warn{color:var(--warn)} .t-err{color:var(--err)}
+.t-badge{display:inline-block;min-width:120px}
+
+/* полоса цифр */
+.stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2)}
+.stats .wrap{display:grid;grid-template-columns:repeat(4,1fr);padding-top:22px;padding-bottom:22px;gap:12px}
+.stat b{display:block;font-size:26px;font-family:var(--mono);color:var(--brand)}
+.stat span{font-size:13px;color:var(--dim)}
+
+/* ---------- секции ---------- */
+section{padding:84px 0}
+.kicker{font-family:var(--mono);font-size:13px;color:var(--special);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
+h2{font-size:32px;font-weight:800;letter-spacing:-.4px}
+.lead{margin-top:12px;color:var(--dim);font-size:17px;max-width:640px}
+
+.grid{display:grid;gap:18px;margin-top:44px}
+.cards{grid-template-columns:repeat(4,1fr)}
+.feats{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--brand);transform:translateY(-2px)}
+.card .ic{font-size:28px;display:block;margin-bottom:14px}
+.card h3{font-size:17px;margin-bottom:8px}
+.card p{font-size:14px;color:var(--dim)}
+.card .ex{margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--special);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:block}
+
+/* шаги */
+.steps{grid-template-columns:repeat(3,1fr)}
+.step{position:relative;padding:30px 26px;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.step n{font-family:var(--mono);font-size:15px;color:#16161e;background:var(--brand);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;margin-bottom:16px}
+.step h3{font-size:17px;margin-bottom:8px}
+.step p{font-size:14px;color:var(--dim)}
+
+/* цены */
+.prices{grid-template-columns:repeat(2,1fr);max-width:760px;margin-left:auto;margin-right:auto}
+.price{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px;text-align:center}
+.price.hot{border-color:var(--brand);box-shadow:0 0 60px rgba(122,162,247,.12)}
+.price .tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--brand);color:#16161e;font-size:12px;font-weight:800;padding:4px 14px;border-radius:20px;white-space:nowrap}
+.price h3{font-size:18px}
+.price .amount{font-family:var(--mono);font-size:44px;font-weight:800;margin:14px 0 4px}
+.price .per{color:var(--muted);font-size:13.5px;margin-bottom:22px}
+.price ul{list-style:none;text-align:left;margin:0 0 26px}
+.price li{font-size:14px;color:var(--dim);padding:7px 0;border-bottom:1px dashed var(--line)}
+.price li::before{content:"✓ ";color:var(--ok);font-weight:700}
+.trial-note{margin-top:26px;text-align:center;color:var(--dim);font-size:14.5px}
+.trial-note b{color:var(--warn)}
+
+/* FAQ */
+.faq{max-width:760px;margin:44px auto 0}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+summary{cursor:pointer;padding:18px 22px;font-weight:600;font-size:15.5px;list-style:none;position:relative}
+summary::after{content:"+";position:absolute;right:20px;top:16px;color:var(--brand);font-size:20px;font-weight:700}
+details[open] summary::after{content:"−"}
+details p{padding:0 22px 20px;color:var(--dim);font-size:14.5px}
+details p b{color:var(--fg)}
+
+/* CTA-финал */
+.final{background:linear-gradient(180deg,var(--bg),var(--bg2));border-top:1px solid var(--line);text-align:center}
+.final h2{font-size:34px}
+.final p{margin:16px auto 30px;color:var(--dim);max-width:560px}
+
+footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:13.5px}
+.frow{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.frow .sp{margin-left:auto}
+kbd{font-family:var(--mono);background:var(--panel);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 7px;font-size:12.5px}
+
+@media(max-width:900px){
+  .hero .wrap{grid-template-columns:1fr}
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .feats{grid-template-columns:1fr 1fr}
+  .stats .wrap{grid-template-columns:1fr 1fr}
+  h1{font-size:34px}
+  nav{display:none}
+}
+@media(max-width:560px){
+  .cards,.feats,.steps,.prices{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hrow">
+    <div class="logo">Site<b>Monitor</b></div>
+    <nav>
+      <a href="#cases">Кому</a>
+      <a href="#features">Возможности</a>
+      <a href="#how">Как работает</a>
+      <a href="#pricing">Цены</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn" href="#get">Скачать</a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Узнай об изменении на сайте <em>раньше всех</em></h1>
+      <p class="sub">SiteMonitor следит за страницами 24/7 — хоть каждые 5 секунд — и присылает алерт в Telegram, Discord или на вебхук в момент, когда поменялось именно то, за чем ты следишь.</p>
+      <div class="cta-row">
+        <a class="btn" href="#get">Скачать для Windows</a>
+        <a class="btn ghost" href="#pricing">7 дней PRO — бесплатно</a>
+      </div>
+      <p class="note">Windows 10/11 x64 · без установки · <b>первые 7 дней PRO бесплатно</b></p>
+    </div>
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>sitemonitor.log — live</span></div>
+      <div class="term-body"><span class="t-dim">[21:47:50]</span> <span class="t-warn t-badge">[FAIL]</span> <span class="t-fg">запрос не прошёл: send failed (попытка 1)</span>
+<span class="t-dim">[21:47:50]</span> <span class="t-err t-badge">[TARGET DOWN]</span> <span class="t-fg">не отвечает: 1 попыток подряд</span>
+<span class="t-dim">[21:48:03]</span> <span class="t-special t-badge">[CHANGE]</span> <span class="t-fg">цена: [89 990 → 74 990]</span>
+<span class="t-dim">[21:48:03]</span> <span class="t-info t-badge">[ALERT→TG]</span> <span class="t-fg">steam-prime: скидка 17% 🎉</span>
+<span class="t-dim">[21:48:31]</span> <span class="t-ok t-badge">[ONLINE]</span> <span class="t-fg">снова отвечает</span>
+<span class="t-dim">[21:49:00]</span> <span class="t-dim t-badge">[ ... ]</span> <span class="t-dim">без изменений (577 B, 163 ms)</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="wrap">
+    <div class="stat"><b>5 сек</b><span>минимальный интервал проверки</span></div>
+    <div class="stat"><b>0 байт</b><span>твоих данных на чужих серверах — софт работает с твоей машины</span></div>
+    <div class="stat"><b>3 канала</b><span>Telegram · Discord · вебхуки — параллельно</span></div>
+    <div class="stat"><b>30 дней</b><span>история аптайма и проверок по каждой цели</span></div>
+  </div>
+</div>
+
+<section id="cases">
+  <div class="wrap">
+    <div class="kicker">кому</div>
+    <h2>Четыре задачи — один монитор</h2>
+    <p class="lead">SiteMonitor создан не для «наблюдения за сайтом вообще», а для конкретных охотов:</p>
+    <div class="grid cards">
+      <div class="card"><span class="ic">💰</span><h3>Цены и скидки</h3><p>Поставщик поменял прайс, магазин закатил распродажу — узнаешь в тот же миг, а не когда выкупили всё дешёвое.</p><span class="ex">num&lt;75000 → алерт при цене ниже 75 000</span></div>
+      <div class="card"><span class="ic">📦</span><h3>Ресток и дефицит</h3><p>Страница товара, релиз, лимитированная серия. Проверка каждые 5 секунд, алерт летит сразу как появилось «в наличии».</p><span class="ex">contains:в наличии</span></div>
+      <div class="card"><span class="ic">💼</span><h3>Вакансии и объявления</h3><p>Страница вакансии, тендер, список участников. Изменилось что-то существенное — дифф покажет, что именно, слово в слово.</p><span class="ex">дифф: −"набор закрыт" +"открыт набор"</span></div>
+      <div class="card"><span class="ic">🛡️</span><h3>Свой сайт</h3><p>Упал, взломали, дефейс, истекает SSL-сертификат — 30 дней истории аптайма в отчёте, алерт при падении.</p><span class="ex">SSL истекает через 7 дн — предупреждение</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="features" style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="kicker">возможности</div>
+    <h2>Инструмент, а не игрушка</h2>
+    <p class="lead">Всё, что нужно для реальной слежки за страницами — и ничего, что гонит твои данные в облако.</p>
+    <div class="grid feats">
+      <div class="card"><h3>🔎 Дифф «что именно изменилось»</h3><p>Не «сайт поменялся», а конкретные строки: было → стало. Никаких ложных тревог из-за таймстемпов и рекламы — вырезай их exclude-правилами.</p></div>
+      <div class="card"><h3>📐 Regex-извлечение значений</h3><p>До 5 правил на цель: вытащи цену, наличие, любой кусок данных. Условия: число меньше/больше, содержит текст, совпадение с шаблоном.</p></div>
+      <div class="card"><h3>⏱️ Интервал от 5 секунд</h3><p>Расписание по дням недели и часам, джиттер против банов, ретраи с экспоненциальным бэкоффом — сервер поднялся, проверка догонит.</p></div>
+      <div class="card"><h3>📤 Telegram · Discord · вебхук</h3><p>Любое число каналов, параллельно. Для каждой цели — свои. Группы в Telegram тоже работают.</p></div>
+      <div class="card"><h3>🔕 Умная тишина</h3><p>Тихие часы, лимит алертов в час, пер-цель cooldown, дневная сводка-дайджест. Спит ночью — но ничего не пропускает.</p></div>
+      <div class="card"><h3>🧅 Прокси и User-Agent</h3><p>Пул прокси с автопроверкой и ротацией, ротация User-Agent, basic-auth, cookies, кастомные заголовки. Свои правила маскировки.</p></div>
+      <div class="card"><h3>🔐 SSL и аптайм</h3><p>Предупреждение об истечении сертификата за 14 дней. История проверок и uptime % за 24 часа, 7 и 30 дней по каждой цели.</p></div>
+      <div class="card"><h3>💾 Снапшоты страниц</h3><p>При изменении сохраняется HTML-слепок момента — доказательство того, что было, даже если страницу уже поменяли снова.</p></div>
+      <div class="card"><h3>🏠 Всё локально</h3><p>Windows-приложение без аккаунтов и «обязательной регистрации». Проверки идут с твоей машины, с твоего IP — сервису не нужно знать, что ты мониторишь.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="kicker">как работает</div>
+    <h2>Три шага до первого алерта</h2>
+    <div class="grid steps">
+      <div class="step"><n>1</n><h3>Добавь цель</h3><p>URL страницы, интервал, заголовки, прокси при необходимости. Конфиг — обычный <kbd>ini</kbd>-файл или окно настроек в приложении.</p></div>
+      <div class="step"><n>2</n><h3>Задай правило</h3><p>Что вытащить (regex), при каком услове тревожить (цена ниже N, текст «в наличии»), или просто «алерт при любом изменении страницы».</p></div>
+      <div class="step"><n>3</n><h3>Получай алерты</h3><p>Telegram, Discord, вебхук, звук на ПК. В сообщении — старое → новое, дифф и ссылка. Первый алерт — в течение минуты.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="kicker">цены</div>
+    <h2>Просто, как и должен быть инструмент</h2>
+    <p class="lead">Без подписок-ловушек и «за каждый пинг отдельно». Одна цена — весь функционал.</p>
+    <div class="grid prices">
+      <div class="price hot">
+        <div class="tag">выгоднее всего</div>
+        <h3>PRO Навсегда</h3>
+        <!-- TODO: подставь свою цену -->
+        <div class="amount">1 990 ₽</div>
+        <div class="per">разовый платёж</div>
+        <ul>
+          <li>Все цели и правила — без ограничений</li>
+          <li>Мгновенная доставка алертов</li>
+          <li>SSL-предупреждения и история 30 дней</li>
+          <li>Работает на твоём железе, ключ = твой HWID</li>
+          <li>Обновления в рамках версии — бесплатно</li>
+        </ul>
+        <a class="btn" href="#get">Забрать навсегда</a>
+      </div>
+      <div class="price">
+        <h3>PRO Спринт</h3>
+        <!-- TODO: подставь свою цену -->
+        <div class="amount">390 ₽</div>
+        <div class="per">7 дней, продлевается когда захочешь</div>
+        <ul>
+          <li>Все цели и правила — без ограничений</li>
+          <li>Мгновенная доставка алертов</li>
+          <li>SSL-предупреждения и история 30 дней</li>
+          <li>Новый ключ каждую неделю — по запросу</li>
+        </ul>
+        <a class="btn ghost" href="#get">Взять неделю</a>
+      </div>
+    </div>
+    <p class="trial-note">Скачал и запустил без ключа — <b>TRIAL: 1 цель, алерты с задержкой 5 минут</b>. Первые <b>7 дней PRO — бесплатно</b>: шлёшь свой HWID, получаешь ключ. Дальше — сам решаешь.</p>
+  </div>
+</section>
+
+<section id="get">
+  <div class="wrap">
+    <div class="kicker">как получить</div>
+    <h2>Ключ — за минуту, без регистрации</h2>
+    <div class="grid steps">
+      <div class="step"><n>1</n><h3>Скачай и запусти</h3><p>Один exe-файл, без установщика. При запуске без ключа приложение покажет твой <b>HWID</b> — отпечаток твоей машины.</p></div>
+      <div class="step"><n>2</n><h3>Шли HWID в Telegram</h3><p>Ключ привязывается к твоему железу: никаких аккаунтов, почт и паролей. <!-- TODO: подставь свой Telegram --> Пиши: <b>@sitemonitor_support</b></p></div>
+      <div class="step"><n>3</n><h3>Вставь ключ в конфиг</h3><p><kbd>[license] key=...</kbd> — и PRO активен. Первая неделя бесплатна, дальше — неделя или навсегда, как решишь.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" style="background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="kicker">вопросы</div>
+    <h2>Что спрашивают перед покупкой</h2>
+    <div class="faq">
+      <details>
+        <summary>Это не облачный сервис? Мне не нужен «ещё один сайт с логином»</summary>
+        <p><b>Именно</b> — SiteMonitor работает с твоего Windows-ПК. Проверки идут с твоего IP, страница сохраняется у тебя, история — у тебя. Это же и защита: сервис-мониторинг видит, <b>что</b> ты мониторишь — SiteMonitor никому этого не сообщает.</p>
+      </details>
+      <details>
+        <summary>Компьютор должен быть включён 24/7?</summary>
+        <p>Для слежки в реальном времени — да, он проверяет цели пока работает. Расписания по часам и дням недели экономят и машину, и нервы:можно следить только в рабочие часы. Пока ПК выключен — проверок нет, по включении SiteMonitor сразу снимает свежий слепок и предупредит, если что-то поменялось.</p>
+      </details>
+      <details>
+        <summary>Сайт банит мои запросы — что делать?</summary>
+        <p>Встроен пул прокси с автопроверкой и ротацией (упал один — SiteMonitor молча берёт следующий), ротация User-Agent из реальных браузеров, свои заголовки, cookies и basic-auth. Джиттер интервала не даёт запросам выглядеть как робот-метроном.</p>
+      </details>
+      <details>
+        <summary>Чем это отличается от «Ctrl+F раз в час»?</summary>
+        <p>Скоростью, диффом и памятью. Проверка каждые 5 секунд вместо твоего «раз в час», сообщение показывает, <b>что именно</b> изменилось, а не «где-то что-то», а история 30 дней хранит всё, что было, даже если страницу поменяли обратно.</p>
+      </details>
+      <details>
+        <summary>Что если поменяю железо / переустановлю Windows?</summary>
+        <p>Ключ привязан к отпечатку машины. Сменил железо — напиши в Telegram, получишь новый ключ по своей покупке. Никаких «активаций лимит исчерпан» на каждый чих.</p>
+      </details>
+      <details>
+        <summary>Как вы относитесь к возвратам?</summary>
+        <p>До покупки — 7 дней PRO бесплатно, этого хватает чтобы понять, твой это инструмент или нет. Сомневаешься — просто не продлевай.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2>Завтра цена изменится. Ты будешь знать первым.</h2>
+    <p>Скачай SiteMonitor, добавь первую цель и получи первый алерт — быстрее, чем дочитаешь этот абзац второй раз.</p>
+    <a class="btn" href="#get">Скачать для Windows</a>
+    <p class="note" style="margin-top:18px">Windows 10/11 x64 · без установки · первые 7 дней PRO бесплатно</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap frow">
+    <div class="logo" style="font-size:15px">Site<b>Monitor</b></div>
+    <span>© 2026 SiteMonitor</span>
+    <!-- TODO: подставь свой Telegram -->
+    <a href="https://t.me/sitemonitor_support">Поддержка в Telegram</a>
+    <span class="sp">сделано для тех, кто не любит опаздывать</span>
+  </div>
+</footer>
+
+</body>
+</html>
